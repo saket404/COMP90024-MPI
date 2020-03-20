@@ -167,7 +167,7 @@ if __name__ == "__main__":
     import time
     start_time = time.time()
     print("-----------START------------------")
-    main(sys.argv[1:])
-    # main_normal(sys.argv[1:])
+    # main(sys.argv[1:])
+    main_normal(sys.argv[1:])
     print("--- %s seconds ---" % (time.time() - start_time))
     
