@@ -11,7 +11,7 @@ Global variables.
 TAG_HT = 8080
 TAG_LANG = 8081
 MASTER_RANK = 0
-LOG_LEVEL = logging.ERROR
+LOG_LEVEL = logging.INFO
 
 
 """
@@ -21,14 +21,11 @@ def preprocess(text):
     text = text.lower()
     return text
 
-def count_ht(hashtags):
-    if hashtags:
-        ht = [preprocess(i['text']) for i in hashtags]
-        count = Counter(ht)
-        return count
-    else:
-        return Counter()
-    
+def count_ht(text):
+    text = preprocess(text)
+    ht = re.findall(r"#(\w+)", text)
+    count = Counter(ht)
+    return count
 
 """
 Arguement Check functions
@@ -81,17 +78,18 @@ def gather_tweets(comm):
 def process_tweets(rank, input_file, processes):
     ht_occurences = Counter([])
     lang_occurences = Counter([])
-
+    logging.info(f"Process: {rank} | Initiating processing task.")
     with open(input_file) as f:
-        logging.info(f"Process: {rank} | Initiating processing task.")
+        # Send tweets to slave processes
         try:
             for i, line in enumerate(f):
                 line = line.replace(",\n","")
                 if i%processes == rank:
                     try:
                         data = json.loads(line)
+                        tweet = data['doc']['text']
                         lang_occurences += Counter([data['doc']['lang']])
-                        ht_occurences += count_ht(data['doc']['entities']['hashtags'])
+                        ht_occurences += count_ht(tweet)
                     except ValueError:
                         logging.info(f"Process: {rank} | Malformed JSON on line: {i}")
                         
