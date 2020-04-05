@@ -107,10 +107,10 @@ def print_output(hashtags,languages):
     print("\n")
     print('----- Top 10 Hashtags -----')
     for i,ht in enumerate(hashtags):
-        print(f'{i+1}. #{ht[0]}, {ht[1]}')
+        print(str(i+1)+'. #'+ht[0]+', '+str(ht[1]))
 
     print('----- Top 10 Languages -----')
     for i,lang in enumerate(languages):
-        print(f'{i+1}. {CC[lang[0]]} ({lang[0]}), {lang[1]}')
+        print(str(i+1)+'. '+CC[lang[0]]+' ('+lang[0]+'), '+str(lang[1]))
 
 

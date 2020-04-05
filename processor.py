@@ -6,7 +6,6 @@ from utilities import preprocess, print_usage, check_ags, print_output
 from operator import itemgetter
 import getopt,sys,json,re,logging
 import time
-from heapq import nlargest
 
 
 """
@@ -24,29 +23,30 @@ def process_tweets(rank, input_file, processes):
     lang_occurences = Counter([])
 
     with open(input_file) as f:
-        logging.info(f"Process: {rank} | Initiating processing task.")
+        logging.info("Process: "+str(rank)+" | Initiating processing task.")
         try:
-            for i, line in enumerate(f):
-                line = line.replace(",\n","")
-                if i%processes == rank:
+            for idx, tweet in enumerate(f):
+                tweet = tweet.replace(",\n","")
+                if idx % processes == rank:
                     try:
-                        data = json.loads(line)
+                        data = json.loads(tweet)
                         lang_occurences[data['doc']['lang']] += 1
                         hashtags = [preprocess(i['text']) for i in data['doc']['entities']['hashtags']]
                         for ht in hashtags:
                             ht_occurences[ht] += 1
 
                     except ValueError:
-                        logging.info(f"Process: {rank} | Malformed JSON on line: {i}")
+                        logging.info("Process: "+str(rank)+" | Malformed JSON on line: "+str(idx))
         except Exception:
-            logging.error(f"Problem reading file.")
+            logging.error("Problem reading file.")
 
-    logging.info(f"Process: {rank} | I am done Processing.")
+    logging.info("Process: "+str(rank)+" | I am done Processing.")
 
     return ht_occurences,lang_occurences
 
 def main(argv):
-    start_time = time.time()
+    
+    start_time = MPI.Wtime()    
     inputFile = check_ags(argv)
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank() 
@@ -56,14 +56,15 @@ def main(argv):
     tot_ht_counts = Counter([])
     tot_lang_counts = Counter([])
 
+
     if rank == 0 :
         if size > 1:
-            logging.info(f'Process: {rank} | I am Master!')
+            logging.info("Process: "+str(rank)+" | I am Master!")
             ht_counts,lang_counts = process_tweets(rank, inputFile, size)
         else:
-            logging.info(f'Process: {rank} | I am processing alone!')
+            logging.info("Process: "+str(rank)+" | I am processing alone!")
             with open(inputFile) as f:
-                logging.info(f"Process: {rank} | Initiating processing task.")
+                logging.info("Process: "+str(rank)+" | Initiating processing task.")
                 try:
                     for i, line in enumerate(f):
                         line = line.replace(",\n","")  
@@ -74,14 +75,14 @@ def main(argv):
                             for ht in hashtags:
                                 tot_ht_counts[ht] += 1
                         except ValueError:
-                            logging.info(f"Process: {rank} | Malformed JSON on line: {i}")
+                            logging.info("Process: "+str(rank)+" | Malformed JSON on line: "+str(i))
                 except Exception:
-                    logging.error(f"Problem reading file.")
+                    logging.error("Problem reading file.")
 
-            logging.info(f"Process: {rank} | I am done Processing.")
+            logging.info("Process: "+str(rank)+" | I am done Processing.")
 
     else:
-        logging.info(f'Process: {rank} | I am Master!')
+        logging.info("Process: "+str(rank)+" | I am Master!")
         ht_counts,lang_counts = process_tweets(rank, inputFile, size)
 
 
@@ -91,14 +92,13 @@ def main(argv):
 
 
     if rank == 0:
-
         top_ht = tot_ht_counts.most_common(10)
         top_lang = tot_lang_counts.most_common(10)
 
-        total = time.time() - start_time
         print_output(top_ht,top_lang)
+        total = MPI.Wtime() - start_time
         print("\n\n")
-        print(f'Total Time for task is {round(total,4)} seconds.')
+        print("Total Time for task is "+str(round(total,4))+" seconds.")
 
 
 if __name__ == "__main__":
