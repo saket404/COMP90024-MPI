@@ -5,7 +5,7 @@ from collections import Counter
 import getopt,sys,json,re,logging
 import time
 
-
+# Language Code dictionary for full form BCP-47
 CC = {
     'am':'Amharic',
     'ar':'Arabic',
@@ -76,7 +76,7 @@ CC = {
 
 
 """
-Preprocessing functions
+Preprocessing functions for lowercasing the text.
 """
 def preprocess(text):
     text = text.lower()
@@ -84,7 +84,7 @@ def preprocess(text):
     
 
 """
-Arugement Check and Output Printing Functions
+Arugement Check for input file.
 """
 def print_usage():
     print ('usage is: parser.py -i <inputfile>')
@@ -102,6 +102,9 @@ def check_ags(argv):
             inputFile = arg
     return inputFile
 
+"""
+Print Results for Top 10 hashtags and Languages used with corresponding frequency.
+"""
 def print_output(hashtags,languages):
     # Print Top 10 HashTags
     print("\n")
@@ -111,6 +114,10 @@ def print_output(hashtags,languages):
 
     print('----- Top 10 Languages -----')
     for i,lang in enumerate(languages):
-        print(str(i+1)+'. '+CC[lang[0]]+' ('+lang[0]+'), '+str(lang[1]))
+        try:
+            print(str(i+1)+'. '+CC[lang[0]]+' ('+lang[0]+'), '+str(lang[1]))
+        except Exception:
+            # In case the languge code is not in the dictionary.
+            print(str(i+1)+'. ('+lang[0]+'), '+str(lang[1]))
 
 
